@@ -68,7 +68,11 @@
             <h2>Project Overview </h2>
           </div>
           <div class="col-md-12 text-left heading-section ftco-animate">
-            <p> Project pitch, end goal, real world applications
+            <p> The ability for robots to understand and interact with their surroundings is highly dependent on their ability to perceive and gather information about the environment. 
+              This usually involves many types of sensors, conveying a variety of information, and complex schemes developed to properly integrate the information supplied by these sensors. 
+              However, it's not always practical to be able to obtain such a wealth of information, where resources are constrained. This project outlines a pipeline that allows for grasping in low-light conditions without the use of depth-cameras, using only RGB-image cameras.
+              We aimed to create a pipeline in which we could take images of an object we intend to grasp in the dark from varying angles, and compute and execute a grasp on the object via image enhancement and mesh reconstruction.
+              This is a low-cost and versatile way to grasp in the dark, which would be helpful in situations where it is difficult to produce consistent lighting for 3D reconstruction (e.g. outdoors or in search and rescue scenarios).
             </p>
           </div>
         </div>
@@ -80,9 +84,17 @@
           <div class="col-md-12 text-center heading-section ftco-animate">
             <h2>Implementation and Results</h2>
           </div>
-
+          
           <div class="col-md-12 text-center heading-section ftco-animate">
             <h5>Setup</h5>
+          </div>
+          <div class="col-md-12 text-left heading-section ftco-animate">
+            <p>Our pipeline consists of three stages. The first stage is responsible for converting images taken of an object we intend to grasp in the dark to enhanced versions that appear to be pictures of the object taken in bright conditions. 
+              This involves using a neural network with a U-net architecture, which consists of an encoder block responsible for downsampling the image and detecting features, a decoder block responsible for upsampling features back into an image, and skip connections between the encoder and decoder block to provide concatenated features to the sparse upsampled blocks.
+            The second stage involves taking these enhanced images and passing them into Colmap, a package for structure from motion and multi view stereo, to generate a 3D point cloud reconstruction of the object to grasp. We then generate a mesh from this point cloud with our custom mesh reconstruction algorithm, which is an extension of the ball-pivoting algorithm.
+            The third stage is a sampling-based approach to computing grasps on a 3D mesh. We repeatedly sample two points on a mesh until we find a set of two points that is feasible for Baxter grippers to grasp, and has a high score according to our grasp metric, which determines how well a compute grasp is able to resist the force of gravity.
+            This pipeline is illustrated by the flow chart below.</p>
+          </div>
           </div> 
           <div class="row justify-content-center mb-4 pb-4">
             <div class="col-md-12 d-flex align-self-stretch ftco-animate justify-content-center">
@@ -100,21 +112,33 @@
           <div class="col-md-12 text-center heading-section ftco-animate">
             <h5>Software</h5>
           </div> 
-          <div class="col-md-12 text-left heading-section ftco-animate">
-            <p>Summarize software used and written provide links when necessary
+          <div class="col-md-12 text-center heading-section ftco-animate">
+            <p>
+              <a href="https://colab.research.google.com/drive/1PIA3zDoIfCpeQKbVkNeBgCGKQow1xKs9?usp=sharing">Google Colab notebook for dark image enhancement neural network training</a>
+              <br>
+              <a href="https://github.com/chevin-ken/106B_final_project">Source Code Github</a>
+              <br>
+              <a href="https://colmap.github.io/">Colmap</a>
             </p> 
           </div> 
 
           <div class="col-md-12 text-center heading-section ftco-animate">
             <h5>Report Link</h5>
           </div> 
-          <div class="col-md-12 text-left heading-section ftco-animate">
-            <p>Insert Report link here
+          <div class="col-md-12 text-center heading-section ftco-animate">
+            <p>
+              <a href="https://colab.research.google.com/drive/1PIA3zDoIfCpeQKbVkNeBgCGKQow1xKs9?usp=sharing">Grasping in the Dark: 3D Reconstruction in Poorly Occluded Settings</a>
             </p>
           </div> 
 
           <div class="col-md-12 text-center heading-section ftco-animate">
             <h5>Demo</h5>
+          </div>
+          <div class="col-md-12 text-left heading-section ftco-animate">
+            <p>We have included some images and videos of our pipeline in action. The first video demonstrates the manner in which we collect pictures of the pawn from varying angles in the dark. The image below shows a point cloud reconstruction of our object generated using Colmap. 
+              The next video shows our mesh reconstruction algorithm in action. We first filter outliers from our pointcloud in the first few steps, and then use the ball pivoting algorithm to reconstruct the mesh from the remaining points. 
+              The last video shows a grasp computed and executed successfully on the object given the mesh we generated as input.
+            </p>
           </div> 
           <div class="col-md-12 text-left heading-section ftco-animate">
             <div class="row justify-content-center">
@@ -129,6 +153,7 @@
               </div>
             </div>
           </div> 
+          <br>
           <div class="row justify-content-center mb-4 pb-4">
             <div class="col-md-12 d-flex align-self-stretch ftco-animate justify-content-center">
               <div class="media block-10 d-block text-center">
@@ -140,6 +165,7 @@
               </div>
             </div>
           </div>
+          <br>
           <div class="col-md-12 text-left heading-section ftco-animate">
             <div class="row justify-content-center">
               <div class="col-md-12 d-flex align-self-stretch ftco-animate justify-content-center">
@@ -153,6 +179,7 @@
               </div>
             </div>
           </div> 
+          <br>
           <div class="col-md-12 text-left heading-section ftco-animate">
             <div class="row justify-content-center">
               <div class="col-md-12 d-flex align-self-stretch ftco-animate justify-content-center">
@@ -177,7 +204,27 @@
           </div>
           <br>
           <div class="col-md-12 text-left heading-section ftco-animate">
-            <p>Summarize results, difficulties encountered, things would have changed, future directions</p>
+            <p>Overall, we determined through experimentation that our our implementated pipeline fell short of our intended goal. There were a couple main reasons for this. 
+              The first reason is that the dataset we collected in order to train our neural network for dark to light image enhancement was not very high quality and did not have that many dark to light image pairs.
+              As a result, the neural network we trained was able to reproduce the outer geometry of our object, but could not capture a lot of the finer details and features on the object. This meant that when we tried to feed enhanced images into Colmap for image enhancement,
+              there were not enough detected features to enable Colmap to generate a high quality point cloud reconstruction. Another reason is that we did not have access to a GPU when implementing this pipeline so we could not use Colmap's dense reconstruction feature.
+              This meant that the point clouds generated by Colmap were sparse, resulting in reconstructed meshes that had holes and did not accurately represent the geometry of the object. However, we do believe our pipeline is designed well to potentially enable such a goal.
+              This is because we tested our whole pipeline without the first stage in our pipeline by passing in images we took of our object in bright conditions directly into Colmap for reconstruction. Doing so resulted in reconstructed meshes that were not perfect,
+              but were still high quality enough for our grasp computation algorithm to have a nonzero success rate in calculating and executing grasps on the object. 
+            </p>
+            <p>There were also difficulties we encountered related to the aforementioned problems. The first is related to collection of our dataset. In order to take pictures of our object from varying angles with known camera positions, it made the most sense to take pictures 
+              with Baxter's hand camera. However, this camera is not very high quality, so the pictures taken for our training dataset were not as feature rich as if we had a higher quality camera. In addition, we did not have opportunities to collect very large datasets,
+              as we needed to turn the lights on and off in the lab room in order to enable our data collection process, and so we could only do this when other groups weren't in lab, which was often at very late hours. The data collection process was also relatively time consuming, limiting
+              our ability to collect very large datasets, which would have allowed us to train a much more effective model for image enhancement. Another issue also briefly mentioned above was lack of GPU on our local machines, which meant we could not use Colmap's dense point cloud reconstruction.
+              This meant the meshes we generated often did not capture the finer details of the surface geometry of the objects. Finally, the lab computers ran Python2, meaning a lot of the packages we depended on were incompatible. Thus, we had to run all of our image processing on our personal laptops
+              and send data back and forth being our laptops and the lab station computer, making our pipeline rather inefficient and not very autonomous.
+            </p>
+            <p>A few improvements we would make in future work address these issues. First, we would figure out a way to mount a higher quality camera on Baxter's arm such that the camera positions are still known but the images we collect are of higher quality.
+              We would also try to find more opportunities to collect data in order to have a more robust dataset for training. In addition, we would remove our dependency on COLMAP for point cloud reconstruction and invest time in implementing our own custom solution,
+              as COLMAP was designed originally for the use case where camera positions are unknown. Although COLMAP did have built in features for computing point clouds with known camera positions and scale, their results for that were not as accurate as we anticipated, so 
+              it could definitely be worthwhile to implement a more accurate and dense point cloud reconstruction with known camera positions. Finally, we would definitely work on a way to make our pipeline much more autonomous such that the entire grasping procedure
+              can be done with a single command, rather than requiring the need to send data back and forth between multiple machines.
+            </p> 
           </div>
         </div>
       </div>
@@ -194,8 +241,6 @@
         <div class="row justify-content-center mb-4 pb-4">
           <div class="col-md-12 text-center heading-section ftco-animate">
             <h4>Kevin Chen</h4>
-            <br>
-            <h6>Bio</h6>
           </div>
           <div class="col-md-12 text-left heading-section ftco-animate">
             <p>Kevin is a 4th year undergraduate studying EECS at UC Berkeley. He is planning to graduate May 2022 and will be working full time as a software engineer. 
@@ -218,11 +263,10 @@
         <div class="row justify-content-center mb-4 pb-4">
           <div class="col-md-12 text-center heading-section ftco-animate">
             <h4>Amit Palekar</h4>
-            <br>
-            <h6>Bio</h6>
           </div>
           <div class="col-md-12 text-left heading-section ftco-animate">
-            <p>Amit bio
+            <p>Amit is a 3rd year undergrad majoring in Computer Science and Data Science. He will be spending the next year interning at Facebook and Rippling. His research interests lie mainly at the intersection of computer vision and control theory. 
+              Outside of academics, Amit loves to play badminton, travel, and explore the city.
             </p>
           </div>
           <br>
@@ -240,11 +284,9 @@
         <div class="row justify-content-center mb-4 pb-4">
           <div class="col-md-12 text-center heading-section ftco-animate">
             <h4>Victor Ho</h4>
-            <br>
-            <h6>Bio</h6>
           </div>
           <div class="col-md-12 text-left heading-section ftco-animate">
-            <p>Victor is a 4th year undergraduate studying EECS at UC Berkeley. He is planning to graduate May 2022  to work for a few years before looking to pursue a graduate degree. 
+            <p>Victor is a 4th year undergraduate studying EECS at UC Berkeley. He is planning to graduate May 2022 to work for a few years before looking to pursue a graduate degree. 
               Victor has experience in both electrical engineering, primarily in digital design, and computer science, focusing on backend software development.
               In his free time Victor likes playing games with friends, going hiking, and cross-country running; he has run more than 2,892 miles (longest linear distance across the contiguous US) since the start of college.
           	</p>
@@ -264,8 +306,6 @@
         <div class="row justify-content-center mb-4 pb-4">
           <div class="col-md-12 text-center heading-section ftco-animate">
             <h4>Jasmine Wang</h4>
-            <br>
-            <h6>Bio</h6>
           </div>
           <div class="col-md-12 text-left heading-section ftco-animate">
             <p>Jasmine is a 4th year undergrad CS major at UC Berkeley. She is planning on graduating May 2022. Jasmine's interests in computer science are focused around machine learning, particularly 
